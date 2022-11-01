@@ -54,5 +54,17 @@ public class TestListImpl {
         while(enumeration.hasMoreElements()){
             System.out.println(enumeration.nextElement());
         }
+
+        System.out.println("Accessing ArrayList Using foreach() from Java 8");
+
+//        empnamecol.forEach(new Consumer<String>() {
+//            @Override
+//            public void accept(String s) {
+//                System.out.println(s);
+//            }
+//        });
+        //empnamecol.forEach((s)->System.out.println(s));
+        empnamecol.forEach(System.out::println);    //Method Reference doesn't needs the parameters
+
     }
 }

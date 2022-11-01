@@ -1,3 +1,5 @@
+import java.io.IOException;
+
 class Employee implements Runnable{
 
     String ename;
@@ -38,7 +40,7 @@ public class TestApp {
         try{
             t1.join();
             t2.join();
-        }catch()
+        }catch(InterruptedException e){}
         for(int start =0;start <= 10; start++){
             System.out.println("Primary Threaded objects prints "+start);
             try {
