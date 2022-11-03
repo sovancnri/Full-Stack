@@ -150,29 +150,29 @@ class EmployeeManagementSystem implements ActionListener {
             System.out.println("Connection got established");
 
             //Step 3 : Create a sql query
-            String msgsql = "select * from tblnriems";
+            String msgsql = "select empid,empname,empsal,empaddress from tblnriems";
 
             // Step 4 : Statement need to be taken care of as messenger
-            stmt = con.createStatement();
+            stmt = con.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
 
             //Step 5 : Now we send sql as message from .java file to oracle
             // and will receive the table back here
             rs = stmt.executeQuery(msgsql);     //A view and points to the column name
 
             // Move the pointer to the actual row ahead of column heading
-            rs.next();
+            /*rs.next();
 
             // Retrieve the info for columns for a given record or row
             int eid = rs.getInt("empid");
             String en = rs.getString("empname");
             int es = rs.getInt("empsal");
-            String ed = rs.getString("empaddress");
+            String ed = rs.getString("empaddress");*/
 
             //Showing the value retrieved from column of the row of a table
-            txteid.setText(Integer.toString(eid));
+            /*txteid.setText(Integer.toString(eid));
             txtename.setText(en);
             txtesalary.setText(Integer.toString(es));
-            txteaddr.setText(ed);
+            txteaddr.setText(ed);*/
 
 
 
@@ -203,29 +203,146 @@ class EmployeeManagementSystem implements ActionListener {
 
     }
 
+    public void fillUpText(){
+        try {
+            int eid = rs.getInt("empid");
+            String en = rs.getString("empname");
+            int es = rs.getInt("empsal");
+            String ed = rs.getString("empaddress");
+
+            txteid.setText(Integer.toString(eid));
+            txtename.setText(en);
+            txtesalary.setText(Integer.toString(es));
+            txteaddr.setText(ed);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public void actionPerformed(ActionEvent componentref) {
+        if(componentref.getActionCommand().equalsIgnoreCase("Insert")){
+            try {
+                // blank new row at the last of the resultset
+                rs.moveToInsertRow();
 
-        if(componentref.getActionCommand() == "Insert"){
-            System.out.println("Insert button got the click action or event");
-        }else if(componentref.getActionCommand() == "Update"){
-            System.out.println("Update button got the click action or event");
-        }else if(componentref.getActionCommand() == "Delete"){
-            System.out.println("Delete button got the click action or event");
-        }else if(componentref.getActionCommand() == "Search"){
-            System.out.println("Search button got the click action or event");
-        } else if (componentref.getActionCommand() == "Clear") {
-            System.out.println("Clear button got the click action or event");
-        }else if (componentref.getActionCommand() == "First") {
+                //collect value from textfield and make it the value of relevant columns and perform
+                //typecasting if
+                rs.updateInt("empid",Integer.parseInt(txteid.getText()));
+                rs.updateString("empname",txtename.getText());
+                rs.updateInt("empsal",Integer.parseInt(txtesalary.getText()));
+                rs.updateString("empaddress",txteaddr.getText());
+
+                // now committing the updated resultset back to original database table
+                rs.insertRow();
+
+                JOptionPane.showMessageDialog(frmMain,"Record got Inserted");
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+        }else if(componentref.getActionCommand().equalsIgnoreCase("Update")){
+            try {
+
+                //collect value from textfield and make it the value of relevant columns and perform
+                //typecasting if
+                rs.updateInt("empid",Integer.parseInt(txteid.getText()));
+                rs.updateString("empname",txtename.getText());
+                rs.updateInt("empsal",Integer.parseInt(txtesalary.getText()));
+                rs.updateString("empaddress",txteaddr.getText());
+
+                // now committing the updated resultset back to original database table
+                rs.updateRow();
+
+                JOptionPane.showMessageDialog(frmMain,"Record got Updated");
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }else if(componentref.getActionCommand().equalsIgnoreCase("Delete")){
+
+            try {
+                rs.deleteRow();
+                JOptionPane.showMessageDialog(frmMain,"Record got Updated");
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+
+        }else if(componentref.getActionCommand().equalsIgnoreCase("Search")){
+
+            if(txteid.getText().isEmpty()){
+                JOptionPane.showMessageDialog(frmMain,"Emp id compulsory for search to happen");
+            }else{
+                //Collected empid from runtime execution
+                int eid = Integer.parseInt(txteid.getText().trim());
+
+                String query = "select empid,empname,empsal,empaddress from tblnriems where eid = ?";
+
+                try {
+                    pstmt = con.prepareStatement(query);    // Set the query with wildcards inside the preparedStatement obj
+                    pstmt.setInt(1,eid);        //Set the value of the first wild card
+                    rs = pstmt.executeQuery();
+                    if(rs.next())
+                        fillUpText();
+                    else
+                        JOptionPane.showMessageDialog(frmMain,eid+" not present in our records");
+
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+
+
+
+            }
+
+        } else if (componentref.getActionCommand().equalsIgnoreCase("Clear")) {
+
+            txteid.setText(" ");
+            txtename.setText(" ");
+            txtesalary.setText(" ");
+            txteaddr.setText(" ");
+        }else if (componentref.getActionCommand().equalsIgnoreCase("First")) {
             System.out.println("First button got the click action or event");
         }else if (componentref.getActionCommand().equals(">")) {
-            System.out.println("Next button got the click action or event");
+            try{
+
+                if(rs.next()){
+                    fillUpText();
+                }else {
+                    rs.previous();
+                    JOptionPane.showMessageDialog(frmMain, "At the last record");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }else if (componentref.getActionCommand() == ">>") {
-            System.out.println("Last button got the click action or event");
+            try {
+                rs.last();
+                fillUpText();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }else if (componentref.getActionCommand() == "<") {
-            System.out.println("Previous button got the click action or event");
+            try{
+
+                if(rs.previous()){
+                    fillUpText();
+                }else {
+                    rs.next();
+                    JOptionPane.showMessageDialog(frmMain, "At the first record");
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }else if (componentref.getActionCommand() == "<<") {
-            System.out.println("First button got the click action or event");
+
+            try {
+                rs.first();
+                fillUpText();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
